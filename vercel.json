@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "public": "build/web",
+  "routes": [
+    {
+      "src": "/FontManifest.json",
+      "dest": "/FontManifest.json",
+      "headers": {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json",
+      "headers": {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=86400, must-revalidate"
+      }
+    },
+    {
+      "src": "/flutter_service_worker.js",
+      "dest": "/flutter_service_worker.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
+    },
+    {
+      "src": "/flutter_bootstrap.js",
+      "dest": "/flutter_bootstrap.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
+    },
+    {
+      "src": "/main.dart.js",
+      "dest": "/main.dart.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/flutter.js",
+      "dest": "/flutter.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/icons/(.*)",
+      "dest": "/icons/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=86400, must-revalidate"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    }
+  ]
+}
