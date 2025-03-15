@@ -10,7 +10,15 @@ pwd
 if [ ! -d "flutter" ]; then
   echo "Flutter not found. Downloading official Flutter 3.29.0..."
   curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.29.0-stable.tar.xz | tar -xJ
+
+  # ✅ Fix permissions and mark Flutter directory as safe
+  chown -R $(whoami) flutter
+  chmod -R 755 flutter
+  git config --global --add safe.directory "`pwd`/flutter"
 fi
+
+# ✅ Suppress Flutter's root warning
+export FLUTTER_SUPPRESS_ROOT_WARNING=true
 
 # Set Flutter path
 export PATH="$PATH:`pwd`/flutter/bin"
