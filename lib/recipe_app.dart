@@ -152,7 +152,7 @@ class RecipeDetailScreen extends StatelessWidget {
               },
             ),
             SizedBox(height: 16),
-            SelectableTextText(
+            SelectableText(
               recipeText,
               style: TextStyle(fontSize: 16),
             ),
