@@ -54,8 +54,16 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
 
       List<Map<String, String>> newRecipes = csvData.skip(1).map((row) {
         String recipeText = row[1].toString().trim();
-        RegExp namePattern = RegExp(r'Name:\s*(.+)');
-        String recipeName = namePattern.firstMatch(recipeText)?.group(1) ?? "Unknown Recipe";
+
+        // Check for both English and Chinese patterns
+        RegExp englishPattern = RegExp(r'Name:\s*(.+)');
+        RegExp chinesePattern = RegExp(r'名稱：\s*(.+)');
+
+        String? englishMatch = englishPattern.firstMatch(recipeText)?.group(1);
+        String? chineseMatch = chinesePattern.firstMatch(recipeText)?.group(1);
+
+        // Use the first matched pattern (Chinese or English) or default to "Unknown Recipe"
+        String recipeName = chineseMatch ?? englishMatch ?? "Unknown Recipe";
 
         return {
           'ID': row[0].toString(),
@@ -85,33 +93,33 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       body: recipes.isEmpty
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: recipes.length,
-        itemBuilder: (context, index) {
-          String recipeId = recipes[index]['ID'] ?? '';
-          String recipeName = recipes[index]['Recipe Name'] ?? 'Unknown Recipe';
+              itemCount: recipes.length,
+              itemBuilder: (context, index) {
+                String recipeId = recipes[index]['ID'] ?? '';
+                String recipeName = recipes[index]['Recipe Name'] ?? 'Unknown Recipe';
 
-          return ListTile(
-            leading: Image.asset(
-              'assets/images/$recipeId.png',
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(Icons.image_not_supported, size: 50, color: Colors.grey);
+                return ListTile(
+                  leading: Image.asset(
+                    'assets/images/$recipeId.png',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.image_not_supported, size: 50, color: Colors.grey);
+                    },
+                  ),
+                  title: Text(recipeName),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecipeDetailScreen(recipe: recipes[index]),
+                      ),
+                    );
+                  },
+                );
               },
             ),
-            title: Text(recipeName),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RecipeDetailScreen(recipe: recipes[index]),
-                ),
-              );
-            },
-          );
-        },
-      ),
     );
   }
 }
