@@ -36,7 +36,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
     print("Loading recipes...");
 
     try {
-      final rawData = await rootBundle.loadString('assets/recipeschinese.csv');
+      final rawData = await rootBundle.loadString('assets/recipes.csv');
       print("Raw CSV data loaded");
 
       List<List<dynamic>> csvData = const CsvToListConverter(
