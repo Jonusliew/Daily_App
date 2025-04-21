@@ -236,7 +236,7 @@ class _TodoListPageState extends State<TodoListPage> {
               ),
               child: Column(
                 children: [
-                  Text(
+                  SelectableText(
                     _quote['quote'] ?? 'Loading...',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -245,7 +245,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  SelectableText(
                     _quote['author'] ?? '',
                     style: const TextStyle(
                       fontSize: 16,
@@ -320,7 +320,7 @@ class SurveyPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            SelectableText(
               'Choose your survey language:',
               style: TextStyle(fontSize: 20), // Increased text size
             ),
