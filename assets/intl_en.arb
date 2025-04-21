@@ -1,0 +1,11 @@
+{
+  "app_title": "Reminder App with Quotes",
+  "home": "Home",
+  "recipes": "Recipes",
+  "bmi": "BMI",
+  "add_task": "Add a Task",
+  "edit_task": "Edit Task",
+  "save": "Save",
+  "cancel": "Cancel",
+  "task_placeholder": "Enter task name"
+}
