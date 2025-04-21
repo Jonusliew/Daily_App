@@ -57,7 +57,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
 
         // Check for both English and Chinese patterns
         RegExp englishPattern = RegExp(r'Name:\s*(.+)');
-        RegExp chinesePattern = RegExp(r'名稱：\s*(.+)');
+        RegExp chinesePattern = RegExp(r'名稱[:：]\s*(.+)');
 
         String? englishMatch = englishPattern.firstMatch(recipeText)?.group(1);
         String? chineseMatch = chinesePattern.firstMatch(recipeText)?.group(1);
