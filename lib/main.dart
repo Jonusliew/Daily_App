@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'bmi_calculator.dart';  // Import BMI calculator
-import 'recipe_app.dart';  // Import Recipe App
-import 'db_helper.dart';  // Your DB helper for managing todos
+import 'bmi_calculator.dart'; 
+import 'recipe_screen.dart';  
+import 'package:health_app/recipe_screen.dart'; 
+import 'db_helper.dart';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
@@ -9,30 +10,23 @@ import 'package:url_launcher/url_launcher.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DBHelper.initialize();
-
-  // Load quotes from CSV
   final quotes = await loadQuotes();
-
   runApp(MyApp(quotes: quotes));
 }
 
-// Function to load quotes from CSV
 Future<List<Map<String, String>>> loadQuotes() async {
   final csvString = await rootBundle.loadString('assets/quotes.csv');
   List<String> rows = csvString.split('\n');
   return rows.skip(1).map((row) {
     final parts = row.split(' - ');
     String quote = parts[0].trim();
-
     quote = quote.replaceAll('"', '').replaceAll('“', '').replaceAll('”', '');
-
     return {'quote': quote, 'author': parts.length > 1 ? parts[1].trim() : ''};
   }).toList();
 }
 
 class MyApp extends StatefulWidget {
   final List<Map<String, String>> quotes;
-
   const MyApp({required this.quotes});
 
   @override
@@ -41,10 +35,17 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _selectedIndex = 0;
+  bool _isEnglish = true;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+    });
+  }
+
+  void _toggleLanguage() {
+    setState(() {
+      _isEnglish = !_isEnglish;
     });
   }
 
@@ -57,42 +58,70 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blueGrey,
       ),
       home: Scaffold(
-        body: _selectedIndex == 0
-            ? TodoListPage(quotes: widget.quotes)  // Home page (Todo List with quotes)
-            : _selectedIndex == 1
-            ? RecipeApp()  // Navigate to Recipe page
-            : BMICalculatorApp(),  // Navigate to BMI page
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          backgroundColor: Colors.white,  // Set background color to pure white
-          selectedItemColor: Color(0xFF666666),  // Set selected item color to lighter gray
-          unselectedItemColor: Colors.grey,  // Set unselected item color to gray
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.fastfood),
-              label: 'Recipes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calculate),
-              label: 'BMI',
-            ),
-          ],
+  body: Stack(
+    children: [
+      _selectedIndex == 0
+          ? TodoListPage(
+              quotes: widget.quotes,
+              isEnglish: _isEnglish,
+              toggleLanguage: _toggleLanguage,
+            )
+          : _selectedIndex == 1
+              ? RecipeScreen(isEnglish: _isEnglish)  // Pass the 'isEnglish' here
+              : BMICalculatorScreen(
+                  isEnglish: _isEnglish,
+                  toggleLanguage: _toggleLanguage,
+                ),
+      Positioned(
+        bottom: 0,
+        left: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FloatingActionButton(
+            onPressed: _toggleLanguage,
+            backgroundColor: Colors.white,
+            child: const Icon(Icons.language, color: Colors.black),
+          ),
         ),
       ),
+    ],
+  ),
+  bottomNavigationBar: BottomNavigationBar(
+    currentIndex: _selectedIndex,
+    onTap: _onItemTapped,
+    backgroundColor: Colors.white,
+    selectedItemColor: Color(0xFF666666),
+    unselectedItemColor: Colors.grey,
+    items: [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: _isEnglish ? 'Home' : '主頁',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.fastfood),
+        label: _isEnglish ? 'Recipes' : '食譜',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.calculate),
+        label: _isEnglish ? 'BMI' : 'BMI 計算機',
+      ),
+    ],
+  ),
+),
     );
   }
 }
 
-// Your TodoListPage (updated based on previous code)
 class TodoListPage extends StatefulWidget {
   final List<Map<String, String>> quotes;
+  final bool isEnglish;
+  final VoidCallback toggleLanguage;
 
-  const TodoListPage({required this.quotes});
+  const TodoListPage({
+    required this.quotes,
+    required this.isEnglish,
+    required this.toggleLanguage,
+  });
 
   @override
   _TodoListPageState createState() => _TodoListPageState();
@@ -162,26 +191,28 @@ class _TodoListPageState extends State<TodoListPage> {
 
   void _showAddTodoDialog({int? id, String? currentTask}) {
     TextEditingController taskController =
-    TextEditingController(text: currentTask ?? '');
+        TextEditingController(text: currentTask ?? '');
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(id == null ? 'Add a Task' : 'Edit Task'),
+          title: Text(widget.isEnglish ? 'Add a Task' : '新增任務'),
           content: TextField(
             controller: taskController,
-            decoration: const InputDecoration(hintText: 'Enter task name'),
+            decoration: InputDecoration(
+              hintText: widget.isEnglish ? 'Enter task name' : '輸入任務名稱',
+            ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(widget.isEnglish ? 'Cancel' : '取消'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Save'),
+              child: Text(widget.isEnglish ? 'Save' : '儲存'),
               onPressed: () async {
                 if (taskController.text.isNotEmpty) {
                   if (id == null) {
@@ -203,57 +234,57 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Tasks', style: TextStyle(color: Colors.white)),
+        title: Text(
+          widget.isEnglish ? 'Daily Tasks' : '每日任務',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.blueGrey[200],
         leading: IconButton(
-          icon: Icon(Icons.poll, color: Color(0xFF666666)), // Apply gray color
+          icon: Icon(Icons.poll, color: Color(0xFF666666)),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => SurveyPage()),
+              MaterialPageRoute(builder: (context) => SurveyPage(isEnglish: widget.isEnglish)),
             );
           },
         ),
       ),
-
       body: Column(
         children: [
-          GestureDetector(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.8,
-              padding: const EdgeInsets.all(16.0),
-              margin: const EdgeInsets.only(top: 20.0, bottom: 20.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            padding: const EdgeInsets.all(16.0),
+            margin: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                SelectableText(
+                  _quote['quote'] ?? 'Loading...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontStyle: FontStyle.italic,
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  SelectableText(
-                    _quote['quote'] ?? 'Loading...',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontStyle: FontStyle.italic,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                SelectableText(
+                  _quote['author'] ?? '',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  SelectableText(
-                    _quote['author'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -309,48 +340,9 @@ class _TodoListPageState extends State<TodoListPage> {
 }
 
 class SurveyPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Survey'),
-        backgroundColor: Colors.blueGrey[200],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SelectableText(
-              'Choose your survey language:',
-              style: TextStyle(fontSize: 20), // Increased text size
-            ),
-            SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                _showSurveyDialog(context, 'Chinese', 'https://forms.gle/t9495FKS6CyPzUUj8');
-              },
-              child: Text(
-                'Chinese',
-                style: TextStyle(fontSize: 20, color: Colors.white), // Increased size, white text
-              ),
-              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey), // Button background color
-            ),
-            SizedBox(height: 10), // Space between buttons
-            TextButton(
-              onPressed: () {
-                _showSurveyDialog(context, 'English', 'https://forms.gle/G4uJrdcN8hRj928P7');
-              },
-              child: Text(
-                'English',
-                style: TextStyle(fontSize: 20, color: Colors.white), // Increased size, white text
-              ),
-              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey), // Button background color
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final bool isEnglish;
+
+  SurveyPage({required this.isEnglish});
 
   void _showSurveyDialog(BuildContext context, String language, String url) {
     showDialog(
@@ -369,17 +361,64 @@ class SurveyPage extends StatelessWidget {
             },
             child: Text(
               url,
-              style: TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline), // Increased size
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
           actions: [
             TextButton(
-              child: Text('Close', style: TextStyle(fontSize: 18)), // Increased size
+              child: Text(isEnglish ? 'Close' : '關閉', style: TextStyle(fontSize: 18)),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isEnglish ? 'Survey' : '回饋表'),
+        backgroundColor: Colors.blueGrey[200],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isEnglish ? 'Choose your survey language:' : '選擇回饋表語言:',
+              style: TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                _showSurveyDialog(context, 'Chinese', 'https://forms.gle/t9495FKS6CyPzUUj8');
+              },
+              child: Text(
+                isEnglish ? 'Chinese' : '中文',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                _showSurveyDialog(context, 'English', 'https://forms.gle/G4uJrdcN8hRj928P7');
+              },
+              child: Text(
+                isEnglish ? 'English' : '英文',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

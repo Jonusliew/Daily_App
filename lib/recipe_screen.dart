@@ -1,49 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:csv/csv.dart';
+import 'package:flutter/services.dart'; // For loading files
+import 'package:csv/csv.dart'; // CSV parsing
 
-void main() {
-  runApp(RecipeApp());
-}
+class RecipeScreen extends StatefulWidget {
+  final bool isEnglish;
 
-class RecipeApp extends StatelessWidget {
+  RecipeScreen({required this.isEnglish});
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Recipe App',
-      theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: RecipeListScreen(),
-    );
-  }
+  _RecipeScreenState createState() => _RecipeScreenState();
 }
 
-class RecipeListScreen extends StatefulWidget {
-  @override
-  _RecipeListScreenState createState() => _RecipeListScreenState();
-}
-
-class _RecipeListScreenState extends State<RecipeListScreen> {
+class _RecipeScreenState extends State<RecipeScreen> {
   List<Map<String, String>> recipes = [];
 
   @override
   void initState() {
     super.initState();
-    loadRecipes();
+    loadRecipes(); // Initial load of recipes
   }
 
+  // Load recipes based on the current language setting
   Future<void> loadRecipes() async {
     print("Loading recipes...");
 
+    // Choose the correct CSV file based on the language setting
+    String fileName = widget.isEnglish ? 'assets/quotesenglish.csv' : 'assets/quotes.csv';
+
     try {
-      final rawData = await rootBundle.loadString('assets/recipes.csv');
+      final rawData = await rootBundle.loadString(fileName);
       print("Raw CSV data loaded");
 
-      List<List<dynamic>> csvData = const CsvToListConverter(
-        eol: '\n',
-        fieldDelimiter: ',',
-        textDelimiter: '"',
-      ).convert(rawData);
+      List<List<dynamic>> csvData = const CsvToListConverter().convert(rawData);
 
       print("CSV Parsed: ${csvData.length} rows");
 
@@ -87,9 +75,9 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Recipes', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blueGrey[200], // Lighter AppBar color
+        backgroundColor: Colors.blueGrey[200],
       ),
-      backgroundColor: Colors.blueGrey[100], // Light background color
+      backgroundColor: Colors.blueGrey[100],
       body: recipes.isEmpty
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -131,41 +119,11 @@ class RecipeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String recipeId = recipe['ID'] ?? '';
-    String recipeText = recipe['Recipe'] ?? '';
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          recipe['Recipe Name'] ?? 'Unknown Recipe',
-          style: TextStyle(color: Colors.white), // Title text color set to white
-        ),
-        backgroundColor: Colors.blueGrey[200], // Lighter AppBar color
-      ),
-      backgroundColor: Colors.blueGrey[100], // Light background color
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              'assets/images/$recipeId.png',
-              width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Center(
-                  child: Icon(Icons.image_not_supported, size: 100, color: Colors.grey),
-                );
-              },
-            ),
-            SizedBox(height: 16),
-            SelectableText(
-              recipeText,
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: Text(recipe['Recipe Name'] ?? 'Recipe Details')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(recipe['Recipe'] ?? 'No details available'),
       ),
     );
   }
