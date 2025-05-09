@@ -10,12 +10,14 @@ import 'package:url_launcher/url_launcher.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DBHelper.initialize();
-  final quotes = await loadQuotes();
+  final quotes = await loadQuotes(true);  // Load English quotes by default
   runApp(MyApp(quotes: quotes));
 }
 
-Future<List<Map<String, String>>> loadQuotes() async {
-  final csvString = await rootBundle.loadString('assets/quotes.csv');
+Future<List<Map<String, String>>> loadQuotes(bool isEnglish) async {
+  // Load the appropriate CSV file based on language
+  final filePath = isEnglish ? 'assets/quotesenglish.csv' : 'assets/quotes.csv';
+  final csvString = await rootBundle.loadString(filePath);
   List<String> rows = csvString.split('\n');
   return rows.skip(1).map((row) {
     final parts = row.split(' - ');
@@ -35,17 +37,24 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _selectedIndex = 0;
-  bool _isEnglish = true;
+  bool _isEnglish = true;  // Default to English
+
+  // Function to switch between languages and load new quotes
+  void _toggleLanguage() async {
+    setState(() {
+      _isEnglish = !_isEnglish;
+    });
+    // Reload quotes based on language selection
+    final quotes = await loadQuotes(_isEnglish);
+    setState(() {
+      widget.quotes.clear();
+      widget.quotes.addAll(quotes);
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-    });
-  }
-
-  void _toggleLanguage() {
-    setState(() {
-      _isEnglish = !_isEnglish;
     });
   }
 
@@ -58,56 +67,56 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blueGrey,
       ),
       home: Scaffold(
-  body: Stack(
-    children: [
-      _selectedIndex == 0
-          ? TodoListPage(
-              quotes: widget.quotes,
-              isEnglish: _isEnglish,
-              toggleLanguage: _toggleLanguage,
-            )
-          : _selectedIndex == 1
-              ? RecipeScreen(isEnglish: _isEnglish)  // Pass the 'isEnglish' here
-              : BMICalculatorScreen(
-                  isEnglish: _isEnglish,
-                  toggleLanguage: _toggleLanguage,
+        body: Stack(
+          children: [
+            _selectedIndex == 0
+                ? TodoListPage(
+                    quotes: widget.quotes,
+                    isEnglish: _isEnglish,
+                    toggleLanguage: _toggleLanguage,
+                  )
+                : _selectedIndex == 1
+                    ? RecipeScreen(isEnglish: _isEnglish)
+                    : BMICalculatorScreen(
+                        isEnglish: _isEnglish,
+                        toggleLanguage: _toggleLanguage,
+                      ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FloatingActionButton(
+                  onPressed: _toggleLanguage,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.language, color: Colors.black),
                 ),
-      Positioned(
-        bottom: 0,
-        left: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: FloatingActionButton(
-            onPressed: _toggleLanguage,
-            backgroundColor: Colors.white,
-            child: const Icon(Icons.language, color: Colors.black),
-          ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFF666666),
+          unselectedItemColor: Colors.grey,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: _isEnglish ? 'Home' : '主頁',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fastfood),
+              label: _isEnglish ? 'Recipes' : '食譜',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calculate),
+              label: _isEnglish ? 'BMI' : 'BMI 計算機',
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-  bottomNavigationBar: BottomNavigationBar(
-    currentIndex: _selectedIndex,
-    onTap: _onItemTapped,
-    backgroundColor: Colors.white,
-    selectedItemColor: Color(0xFF666666),
-    unselectedItemColor: Colors.grey,
-    items: [
-      BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: _isEnglish ? 'Home' : '主頁',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.fastfood),
-        label: _isEnglish ? 'Recipes' : '食譜',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.calculate),
-        label: _isEnglish ? 'BMI' : 'BMI 計算機',
-      ),
-    ],
-  ),
-),
     );
   }
 }
@@ -198,11 +207,10 @@ class _TodoListPageState extends State<TodoListPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-  widget.isEnglish
-      ? (id == null ? 'Add a Task' : 'Edit Task')
-      : (id == null ? '新增任務' : '編輯任務'),
-),
-
+            widget.isEnglish
+                ? (id == null ? 'Add a Task' : 'Edit Task')
+                : (id == null ? '新增任務' : '編輯任務'),
+          ),
           content: TextField(
             controller: taskController,
             decoration: InputDecoration(
@@ -216,24 +224,23 @@ class _TodoListPageState extends State<TodoListPage> {
                 Navigator.of(context).pop();
               },
             ),
-           TextButton(
-  child: Text(
-    widget.isEnglish
-        ? (id == null ? 'Save' : 'Update')
-        : (id == null ? '儲存' : '更新'),
-  ),
-  onPressed: () async {
-    if (taskController.text.isNotEmpty) {
-      if (id == null) {
-        await _addTodoItem(taskController.text);
-      } else {
-        await _editTodoItem(id, taskController.text);
-      }
-      Navigator.of(context).pop();
-    }
-  },
-),
-
+            TextButton(
+              child: Text(
+                widget.isEnglish
+                    ? (id == null ? 'Save' : 'Update')
+                    : (id == null ? '儲存' : '更新'),
+              ),
+              onPressed: () async {
+                if (taskController.text.isNotEmpty) {
+                  if (id == null) {
+                    await _addTodoItem(taskController.text);
+                  } else {
+                    await _editTodoItem(id, taskController.text);
+                  }
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
           ],
         );
       },
@@ -393,41 +400,24 @@ class SurveyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEnglish ? 'Survey' : '回饋表'),
+        title: Text(isEnglish ? 'Survey' : '調查'),
         backgroundColor: Colors.blueGrey[200],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              isEnglish ? 'Choose your survey language:' : '選擇回饋表語言:',
-              style: TextStyle(fontSize: 20),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                _showSurveyDialog(context, 'Chinese', 'https://forms.gle/t9495FKS6CyPzUUj8');
-              },
-              child: Text(
-                isEnglish ? 'Chinese' : '中文',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
-              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                _showSurveyDialog(context, 'English', 'https://forms.gle/G4uJrdcN8hRj928P7');
-              },
-              child: Text(
-                isEnglish ? 'English' : '英文',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
-              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
-            ),
-          ],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Color(0xFF666666)),
+          onPressed: () => Navigator.pop(context),
         ),
+      ),
+      body: Column(
+        children: [
+          ListTile(
+            title: Text(isEnglish ? 'Take the Survey (English)' : '參加調查 (中文)'),
+            onTap: () => _showSurveyDialog(
+              context,
+              isEnglish ? 'English' : '中文',
+              'https://www.surveymonkey.com/r/your-survey-link',
+            ),
+          ),
+        ],
       ),
     );
   }
