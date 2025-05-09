@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'bmi_calculator.dart'; 
-import 'recipe_screen.dart';  
-import 'package:health_app/recipe_screen.dart'; 
+import 'bmi_calculator.dart';
+import 'recipe_screen.dart';
+import 'package:health_app/recipe_screen.dart';
 import 'db_helper.dart';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;
@@ -10,26 +10,11 @@ import 'package:url_launcher/url_launcher.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DBHelper.initialize();
-  final quotes = await loadQuotes(true);  // Load English quotes by default
-  runApp(MyApp(quotes: quotes));
-}
-
-Future<List<Map<String, String>>> loadQuotes(bool isEnglish) async {
-  // Load the appropriate CSV file based on language
-  final filePath = isEnglish ? 'assets/quotesenglish.csv' : 'assets/quotes.csv';
-  final csvString = await rootBundle.loadString(filePath);
-  List<String> rows = csvString.split('\n');
-  return rows.skip(1).map((row) {
-    final parts = row.split(' - ');
-    String quote = parts[0].trim();
-    quote = quote.replaceAll('"', '').replaceAll('“', '').replaceAll('”', '');
-    return {'quote': quote, 'author': parts.length > 1 ? parts[1].trim() : ''};
-  }).toList();
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {
-  final List<Map<String, String>> quotes;
-  const MyApp({required this.quotes});
+  const MyApp({super.key});
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -37,19 +22,33 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _selectedIndex = 0;
-  bool _isEnglish = true;  // Default to English
+  bool _isEnglish = true;
+  List<Map<String, String>> _quotes = [];
 
-  // Function to switch between languages and load new quotes
+  @override
+  void initState() {
+    super.initState();
+    _loadQuotes();
+  }
+
+  Future<void> _loadQuotes() async {
+    final csvString = await rootBundle
+        .loadString(_isEnglish ? 'assets/quotesenglish.csv' : 'assets/quotes.csv');
+    List<String> rows = csvString.split('\n');
+    setState(() {
+      _quotes = rows.skip(1).map((row) {
+        final parts = row.split(' - ');
+        String quote = parts[0].trim().replaceAll('"', '').replaceAll('“', '').replaceAll('”', '');
+        return {'quote': quote, 'author': parts.length > 1 ? parts[1].trim() : ''};
+      }).toList();
+    });
+  }
+
   void _toggleLanguage() async {
     setState(() {
       _isEnglish = !_isEnglish;
     });
-    // Reload quotes based on language selection
-    final quotes = await loadQuotes(_isEnglish);
-    setState(() {
-      widget.quotes.clear();
-      widget.quotes.addAll(quotes);
-    });
+    await _loadQuotes();
   }
 
   void _onItemTapped(int index) {
@@ -71,7 +70,7 @@ class _MyAppState extends State<MyApp> {
           children: [
             _selectedIndex == 0
                 ? TodoListPage(
-                    quotes: widget.quotes,
+                    quotes: _quotes,
                     isEnglish: _isEnglish,
                     toggleLanguage: _toggleLanguage,
                   )
@@ -99,19 +98,19 @@ class _MyAppState extends State<MyApp> {
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFF666666),
+          selectedItemColor: const Color(0xFF666666),
           unselectedItemColor: Colors.grey,
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               label: _isEnglish ? 'Home' : '主頁',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.fastfood),
+              icon: const Icon(Icons.fastfood),
               label: _isEnglish ? 'Recipes' : '食譜',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calculate),
+              icon: const Icon(Icons.calculate),
               label: _isEnglish ? 'BMI' : 'BMI 計算機',
             ),
           ],
@@ -400,24 +399,41 @@ class SurveyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEnglish ? 'Survey' : '調查'),
+        title: Text(isEnglish ? 'Survey' : '回饋表'),
         backgroundColor: Colors.blueGrey[200],
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF666666)),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
-      body: Column(
-        children: [
-          ListTile(
-            title: Text(isEnglish ? 'Take the Survey (English)' : '參加調查 (中文)'),
-            onTap: () => _showSurveyDialog(
-              context,
-              isEnglish ? 'English' : '中文',
-              'https://www.surveymonkey.com/r/your-survey-link',
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isEnglish ? 'Choose your survey language:' : '選擇回饋表語言:',
+              style: TextStyle(fontSize: 20),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {
+                _showSurveyDialog(context, 'Chinese', 'https://forms.gle/t9495FKS6CyPzUUj8');
+              },
+              child: Text(
+                isEnglish ? 'Chinese' : '中文',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                _showSurveyDialog(context, 'English', 'https://forms.gle/G4uJrdcN8hRj928P7');
+              },
+              child: Text(
+                isEnglish ? 'English' : '英文',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.blueGrey),
+            ),
+          ],
+        ),
       ),
     );
   }
