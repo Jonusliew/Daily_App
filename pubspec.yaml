@@ -30,6 +30,7 @@ flutter:
     - assets/quotes.csv
     - assets/quotesenglish.csv
     - assets/recipes.csv
+    - assets/recipesenglish.csv
     - assets/images/1001.png
     - assets/images/1002.png
     - assets/images/1003.png

@@ -197,7 +197,12 @@ class _TodoListPageState extends State<TodoListPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(widget.isEnglish ? 'Add a Task' : '新增任務'),
+          title: Text(
+  widget.isEnglish
+      ? (id == null ? 'Add a Task' : 'Edit Task')
+      : (id == null ? '新增任務' : '編輯任務'),
+),
+
           content: TextField(
             controller: taskController,
             decoration: InputDecoration(
@@ -211,19 +216,24 @@ class _TodoListPageState extends State<TodoListPage> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: Text(widget.isEnglish ? 'Save' : '儲存'),
-              onPressed: () async {
-                if (taskController.text.isNotEmpty) {
-                  if (id == null) {
-                    await _addTodoItem(taskController.text);
-                  } else {
-                    await _editTodoItem(id, taskController.text);
-                  }
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
+           TextButton(
+  child: Text(
+    widget.isEnglish
+        ? (id == null ? 'Save' : 'Update')
+        : (id == null ? '儲存' : '更新'),
+  ),
+  onPressed: () async {
+    if (taskController.text.isNotEmpty) {
+      if (id == null) {
+        await _addTodoItem(taskController.text);
+      } else {
+        await _editTodoItem(id, taskController.text);
+      }
+      Navigator.of(context).pop();
+    }
+  },
+),
+
           ],
         );
       },

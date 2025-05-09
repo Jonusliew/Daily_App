@@ -54,12 +54,6 @@ class _BMICalculatorScreenState extends State<BMICalculatorScreen> {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blueGrey[200],
-        actions: [
-          IconButton(
-            icon: Icon(Icons.language),
-            onPressed: widget.toggleLanguage,
-          ),
-        ],
       ),
       backgroundColor: Colors.blueGrey[100],
       body: Padding(

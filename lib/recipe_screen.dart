@@ -25,7 +25,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     print("Loading recipes...");
 
     // Choose the correct CSV file based on the language setting
-    String fileName = widget.isEnglish ? 'assets/quotesenglish.csv' : 'assets/quotes.csv';
+    String fileName = widget.isEnglish ? 'assets/recipesenglish.csv' : 'assets/recipes.csv';
 
     try {
       final rawData = await rootBundle.loadString(fileName);
@@ -74,7 +74,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Recipes', style: TextStyle(color: Colors.white)),
+        title: Text(
+  widget.isEnglish ? 'Recipes' : '食譜',
+  style: TextStyle(color: Colors.white),
+),
         backgroundColor: Colors.blueGrey[200],
       ),
       backgroundColor: Colors.blueGrey[100],
@@ -119,11 +122,40 @@ class RecipeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String recipeId = recipe['ID'] ?? '';
+
     return Scaffold(
-      appBar: AppBar(title: Text(recipe['Recipe Name'] ?? 'Recipe Details')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(recipe['Recipe'] ?? 'No details available'),
+      appBar: AppBar(
+        title: Text(recipe['Recipe Name'] ?? 'Recipe Details'),
+        backgroundColor: Colors.blueGrey[200],
+      ),
+      backgroundColor: Colors.blueGrey[50],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Image.asset(
+              'assets/images/$recipeId.png',
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                );
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                recipe['Recipe'] ?? 'No details available',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
