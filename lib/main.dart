@@ -67,33 +67,34 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         body: Stack(
-          children: [
-            _selectedIndex == 0
-                ? TodoListPage(
-                    quotes: _quotes,
-                    isEnglish: _isEnglish,
-                    toggleLanguage: _toggleLanguage,
-                  )
-                : _selectedIndex == 1
-                    ? RecipeScreen(isEnglish: _isEnglish)
-                    : BMICalculatorScreen(
-                        isEnglish: _isEnglish,
-                        toggleLanguage: _toggleLanguage,
-                      ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FloatingActionButton(
-                  onPressed: _toggleLanguage,
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.language, color: Colors.black),
-                ),
+  children: [
+    _selectedIndex == 0
+        ? TodoListPage(
+            quotes: _quotes,
+            isEnglish: _isEnglish,
+            toggleLanguage: _toggleLanguage,
+          )
+        : _selectedIndex == 1
+            ? RecipeScreen(isEnglish: _isEnglish)
+            : BMICalculatorScreen(
+                isEnglish: _isEnglish,
+                toggleLanguage: _toggleLanguage,
               ),
-            ),
-          ],
+    if (_selectedIndex == 0)
+      Positioned(
+        bottom: 0,
+        left: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FloatingActionButton(
+            onPressed: _toggleLanguage,
+            backgroundColor: Colors.white,
+            child: const Icon(Icons.language, color: Colors.black),
+          ),
         ),
+      ),
+  ],
+),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
@@ -145,6 +146,15 @@ class _TodoListPageState extends State<TodoListPage> {
     super.initState();
     _loadRandomDailyQuote();
     _fetchTodos();
+  }
+
+  @override
+  void didUpdateWidget(covariant TodoListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.isEnglish != widget.isEnglish || oldWidget.quotes != widget.quotes) {
+      _loadRandomDailyQuote();
+    }
   }
 
   void _loadRandomDailyQuote() {
